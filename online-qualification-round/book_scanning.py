@@ -95,6 +95,9 @@ processedLibraries = [False] * noLibraries
 selectedLibraries = []
 while currentDay < days and len(selectedLibraries) < len(libraries):
     lib = nextLibrary(currentDay)
+    if lib == -1:
+        break
+    processedLibraries[lib] = True
     picked = pickedBooks(lib, currentDay)
     (signup, _) = libraries[lib]
     currentDay += signup
