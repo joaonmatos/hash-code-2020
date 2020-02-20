@@ -7,7 +7,6 @@ lines = sys.stdin.readlines()
 
 books = []
 libraries = []
-ocurrences = []
 days = 0
 noLibraries = 0
 noBooks = 0
@@ -21,7 +20,6 @@ for line in lines:
         numbers = line.split()
         noBooks = int(numbers[0])
         noLibraries = int(numbers[1])
-        ocurrences = [False] * (noBooks * noLibraries)
         days = int(numbers[2])
         readFirstLine = True
     elif not readSecondLine:
@@ -34,19 +32,23 @@ for line in lines:
         numbers = line.split()
         signup = int(numbers[1])
         rate = int(numbers[2])
-        libraries.append((signup, rate))
+        libraries.append([signup, rate])
         odd = False
     else:
+        ocurrences = {}
         for book in line.split():
-            ocurrences[offset(int(book), library)] = True
+            bookId = int(book)
+            bookScore = books[bookId]
+            ocurrences[bookId] = bookScore
+        libraries[library].append(ocurrences)
         odd = True
         library += 1
 
-def libraryBooks(library):
+def libraryBooks(lib):
+    ocurrences = libraries[lib][2]
     libraryBooks = []
-    for book in range(noBooks):
-        if ocurrences[offset(book, library)]:
-            libraryBooks.append((book, books[book]))
+    for book in ocurrences:
+        libraryBooks.append((book, ocurrences[book]))
     return libraryBooks
 
 def bookTupleToScore(book):
@@ -54,7 +56,9 @@ def bookTupleToScore(book):
     return score
 
 def maxLibraryScore(library, day):
-    (signupDays, booksPerDay) = libraries[library]
+    lib = libraries[library]
+    signupDays = lib[0]
+    booksPerDay = lib[1]
     operationStartDay = day + signupDays
     scores = libraryBooks(library)
     scores.sort(reverse=True,key=bookTupleToScore)
@@ -65,8 +69,10 @@ def maxLibraryScore(library, day):
     return totalScore
 
 def deleteBookOcurrences(book):
-    for library in range(noLibraries):
-        ocurrences[offset(book, library)] = False
+    for library in libraries:
+        ocurrences = library[2]
+        if book in ocurrences:
+            ocurrences.pop(book)
 
 def nextLibrary(day):
     maxScore = 0
@@ -79,7 +85,9 @@ def nextLibrary(day):
     return selectedLibrary
 
 def pickedBooks(library, day):
-    (signupDays, booksPerDay) = libraries[library]
+    lib = libraries[library]
+    signupDays = lib[0]
+    booksPerDay = lib[1]
     operationStartDay = day + signupDays
     books = libraryBooks(library)
     books.sort(reverse=True,key=bookTupleToScore)
@@ -99,7 +107,7 @@ while currentDay < days and len(selectedLibraries) < len(libraries):
         break
     processedLibraries[lib] = True
     picked = pickedBooks(lib, currentDay)
-    (signup, _) = libraries[lib]
+    signup = libraries[lib][0]
     currentDay += signup
     for book in picked:
         deleteBookOcurrences(book)
